@@ -37,7 +37,7 @@
                                 <h1 class="mb-0 h3" style="font-family: 'Poppins', sans-serif; color: #2E384D;">Inicio
                                     de Sesión</h1>
                             </div>
-                            <form class="mt-4" onsubmit="showTokenForm(); return false;">
+                            <form class="mt-4" id="formLogin">
                                 <div class="form-group mb-4">
                                     <label for="email" style="font-family: 'Inter', sans-serif;">Correo
                                         Electrónico</label>
@@ -86,72 +86,148 @@
                                 </div>
                             </form>
                         </div>
-                        <div id="tokenForm"
-                            class="bg-white shadow border-0 rounded border-light p-4 p-lg-5 w-100 fmxw-500"
-                            style="display: none;">
-                            <div class="text-center text-md-center mb-4 mt-md-0">
-                                <!-- Logo también en el formulario de token -->
-                                <div class="mb-4" style="text-align: center;">
-                                    <img src="../assets/img/brand/EscuelaLogo.png" alt="Skolaris Logo"
-                                        style="max-height: 80px; width: auto;">
-                                </div>
-                                <h1 class="mb-0 h3" style="font-family: 'Poppins', sans-serif; color: #2E384D;">Token de
-                                    Verificación</h1>
-                                <p class="mt-2" style="font-family: 'Roboto', sans-serif;">Ingresa el código de
-                                    verificación</p>
-                                <p id="tokenError" class="text-danger"
-                                    style="display: none; font-family: 'Roboto', sans-serif;">Código incorrecto. Intenta
-                                    nuevamente.</p>
-                            </div>
-                            <form onsubmit="verifyToken(); return false;">
-                                <div class="form-group mb-4">
-                                    <label for="token" style="font-family: 'Inter', sans-serif;">Código de 4
-                                        dígitos</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <svg class="icon icon-xs text-gray-600" fill="currentColor"
-                                                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd"
-                                                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                                    clip-rule="evenodd"></path>
-                                            </svg>
-                                        </span>
-                                        <input type="text" class="form-control" placeholder="****" id="token" required
-                                            style="font-family: 'Roboto', sans-serif;">
-                                    </div>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn"
-                                        style="background-color: #2E384D; color: white; font-family: 'Inter', sans-serif;">Verificar</button>
-                                </div>
-                            </form>
-                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <script>
-        function showTokenForm() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('tokenForm').style.display = 'block';
+   <script>
+  const paginasPermitidas = {
+    estudiante: [
+      'actividades_usuario.html',
+      'asistencia_usuario.html',
+      'calificaciones_usuario.html',
+      'comunicacion_usuario.html',
+      'docentes_usuario.html',
+      'horarios_usuario.html',
+      'inicio_sesion.html',
+      'olvide_contrasena.html',
+      'perfil.html',
+      'reportes_usuario.html',
+      'Soporte.html',
+      'ver_normativa.html',
+      'pagina_principal.html'
+    ],
+    admin: [
+      'actividades_usuario.html',
+      'asistencia_usuario.html',
+      'calificaciones_usuario.html',
+      'comunicacion_usuario.html',
+      'docentes_usuario.html',
+      'horarios_usuario.html',
+      'inicio_sesion.html',
+      'olvide_contrasena.html',
+      'perfil.html',
+      'reportes_usuario.html',
+      'Soporte.html',
+      'ver_normativa.html',
+      'pagina_principal.html',
+      'actividades_docente.html',
+      'administrador.html',
+      'asistencia_docente.html',
+      'calificaciones_docente.html',
+      'comunicacion_docente.html',
+      'docentes_administrador.html',
+      'horarios_administrador.html',
+      'horarios_docente.html',
+      'reportes_docente.html'
+    ],
+    profesor: [
+      'asistencia_docente.html',
+      'calificaciones_docente.html',
+      'comunicacion_docente.html',
+      'horarios_docente.html',
+      'inicio_sesion.html',
+      'olvide_contrasena.html',
+      'perfil.html',
+      'reportes_docente.html',
+      'Soporte.html',
+      'ver_normativa.html',
+      'pagina_principal.html'
+    ]
+  };
+
+  document.getElementById('formLogin').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const contrasena = document.getElementById('password').value;
+
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, contrasena })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('Login exitoso:', data);
+
+        const userRole = (data.user?.rol || '').toLowerCase();
+        if (!userRole || !paginasPermitidas[userRole]) {
+          alert('Rol no válido o no asignado.');
+          return;
         }
 
-        function verifyToken() {
-            const token = document.getElementById('token').value;
-            const errorElement = document.getElementById('tokenError');
+        localStorage.setItem('userRole', userRole);
+        localStorage.setItem('modulosPermitidos', JSON.stringify(paginasPermitidas[userRole]));
+        localStorage.setItem('userData', JSON.stringify(data.user)); // Guardar datos completos usuario
 
-            if (token === '1234') {
-                // Token correcto - redirigir al index
-                window.location.href = '../index.html';
-            } else {
-                // Token incorrecto - mostrar error
-                errorElement.style.display = 'block';
-                document.getElementById('token').focus();
-            }
-        }
-    </script>
+        console.log('Módulos permitidos para el rol:', paginasPermitidas[userRole]);
+
+        // Redirigir a la página principal
+        window.location.href = '../pagina_principal.html';
+      } else {
+        alert(data.message || data.error || 'Credenciales inválidas');
+      }
+    } catch (error) {
+      console.error('Error en el login:', error);
+      alert('Error al conectar con el servidor');
+    }
+  });
+
+  // Mostrar/ocultar módulos según rol usando data-modulo
+  function mostrarOpcionesSegunRol() {
+    const modulosPermitidos = JSON.parse(localStorage.getItem('modulosPermitidos')) || [];
+    const elementosMenu = document.querySelectorAll('[data-modulo]');
+
+    elementosMenu.forEach(el => {
+      const modulo = el.getAttribute('data-modulo');
+      if (modulosPermitidos.includes(modulo)) {
+        el.style.display = '';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  }
+
+  // Ocultar links del navbar según rol sin usar data-modulo
+  function ocultarLinksSegunRol() {
+    const rol = localStorage.getItem('userRole');
+    if (!rol || !paginasPermitidas[rol]) return;
+
+    const enlaces = document.querySelectorAll('a.nav-link');
+
+    enlaces.forEach(enlace => {
+      const href = enlace.getAttribute('href').split('/').pop();
+      if (!paginasPermitidas[rol].includes(href)) {
+        enlace.style.display = 'none';
+      }
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    ocultarLinksSegunRol();
+    mostrarOpcionesSegunRol();
+  });
+</script>
+
+
+
+
 </body>
 
 </html>
