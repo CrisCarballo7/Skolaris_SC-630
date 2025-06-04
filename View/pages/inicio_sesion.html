@@ -172,6 +172,7 @@
           return;
         }
 
+        localStorage.setItem('token', data.token);  // Suponiendo que el backend devuelve { token, user }
         localStorage.setItem('userRole', userRole);
         localStorage.setItem('modulosPermitidos', JSON.stringify(paginasPermitidas[userRole]));
         localStorage.setItem('userData', JSON.stringify(data.user)); // Guardar datos completos usuario
@@ -224,8 +225,6 @@
     mostrarOpcionesSegunRol();
   });
 </script>
-
-
 
 
 </body>
