@@ -39,17 +39,27 @@ const obtenerUsuarios = async (req, res) => {
   }
 };
 
-// Actualizar usuario (sin cambiar la contraseña aquí)
+// Actualizar usuario basado en el id del token (req.user)
 const actualizarUsuarios = async (req, res) => {
   try {
-    // Para actualizar contraseña, se recomienda un endpoint aparte
+    const userId = req.user.id || req.user._id;
+    if (!userId) {
+      return res.status(400).json({ error: "ID de usuario no encontrado" });
+    }
+
     const usuarioActualizado = await modeloUsuario.findByIdAndUpdate(
-      req.params.id,
+      userId,
       req.body,
       { new: true }
     );
+
+    if (!usuarioActualizado) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
     res.status(200).json(usuarioActualizado);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error al actualizar los datos" });
   }
 };
@@ -64,10 +74,33 @@ const eliminarUsuarios = async (req, res) => {
   }
 };
 
+// =====> NUEVO: Obtener datos del usuario autenticado
+const obtenerUsuarioActual = async (req, res) => {
+  try {
+    // req.user viene del authMiddleware (payload del JWT)
+    // asumimos que el payload tiene `id` (o _id). Ajusta si tu campo es distinto.
+    const userId = req.user.id || req.user._id;
+    if (!userId) {
+      return res.status(400).json({ error: 'ID de usuario no encontrado en token' });
+    }
+
+    // Traer del modelo solo los campos que quieras exponer (sin la contraseña)
+    const usuario = await modeloUsuario.findById(userId).select('-contrasena');
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no existe' });
+    }
+
+    res.status(200).json(usuario);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener datos del usuario actual' });
+  }
+};
+
 module.exports = {
   crearUsuario,
   obtenerUsuarios,
   actualizarUsuarios,
   eliminarUsuarios,
+  obtenerUsuarioActual,
 };
-// Este controlador maneja las operaciones CRUD para los usuarios, incluyendo la creación de usuarios con hashing de contraseña.

@@ -505,27 +505,27 @@
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label" style="font-weight: bold;">Nombre</label>
-                      <input type="text" class="form-control" value="Juan Carlos">
+                      <input type="text" class="form-control" value="Juan Carlos" id="editNombre">
                     </div>
                     <div class="mb-3">
                       <label class="form-label" style="font-weight: bold;">Apellidos</label>
-                      <input type="text" class="form-control" value="Pérez Rodríguez">
+                      <input type="text" class="form-control" value="Pérez Rodríguez" id="editApellidos">
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label" style="font-weight: bold;">Correo Electrónico</label>
-                      <input type="email" class="form-control" value="juan.perez@example.com">
+                      <input type="email" class="form-control" value="juan.perez@example.com" id="editCorreo">
                     </div>
                     <div class="mb-3">
                       <label class="form-label" style="font-weight: bold;">Fecha de Nacimiento</label>
-                      <input type="date" class="form-control" value="2005-03-15">
+                      <input type="date" class="form-control" value="2005-03-15" id="editFechaNacimiento">
                     </div>
                   </div>
                 </div>
                 <div class="mb-3" style="font-family: 'Roboto', sans-serif;">
                   <label class="form-label" style="font-weight: bold;">Dirección</label>
-                  <textarea class="form-control">San José, 200 metros norte del Parque Central</textarea>
+                  <textarea class="form-control" id="editDireccion">San José, 200 metros norte del Parque Central</textarea>
                 </div>
                 <div class="d-flex justify-content-end">
                   <button type="button" class="btn btn-primary me-2" id="cancelPersonalEdit">Descartar</button>
@@ -731,6 +731,7 @@
 
   <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <script src="../assets/js/cargarUsuarioNavbar.js"></script>
 
   <!-- Volt JS -->
   <script src="../assets/js/volt.js"></script>
@@ -791,6 +792,209 @@
       document.getElementById('familyInfoEdit').style.display = 'none';
     });
   </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarYMostrarPerfil();
+
+    const editPersonalLink = document.getElementById('editPersonalInfo');
+    const personalView = document.getElementById('personalInfoView');
+    const personalEdit = document.getElementById('personalInfoEdit');
+    const cancelPersonalEdit = document.getElementById('cancelPersonalEdit');
+    const form = document.querySelector("#personalInfoEdit form");
+
+    // Variable para almacenar el usuario actual
+    let datosUsuarioActual = null;
+
+    // Al hacer clic en "Editar mi información"
+    if (editPersonalLink) {
+      editPersonalLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (datosUsuarioActual) {
+          document.getElementById('editNombre').value = datosUsuarioActual.nombre || '';
+          document.getElementById('editApellidos').value = datosUsuarioActual.apellido || '';
+          document.getElementById('editCorreo').value = datosUsuarioActual.email || '';
+          document.getElementById('editFechaNacimiento').value = datosUsuarioActual.fechaNacimiento ? datosUsuarioActual.fechaNacimiento.split('T')[0] : '';
+          document.getElementById('editDireccion').value = datosUsuarioActual.direccion || '';
+        }
+        personalView.style.display = 'none';
+        personalEdit.style.display = 'block';
+      });
+    }
+
+    // Cancelar edición
+    if (cancelPersonalEdit) {
+      cancelPersonalEdit.addEventListener('click', () => {
+        personalEdit.style.display = 'none';
+        personalView.style.display = 'block';
+      });
+    }
+
+    // Enviar formulario de edición
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const nombre = document.getElementById("editNombre").value.trim();
+        const apellidos = document.getElementById("editApellidos").value.trim();
+        const correo = document.getElementById("editCorreo").value.trim();
+        const fechaNacimiento = document.getElementById("editFechaNacimiento").value;
+        const direccion = document.getElementById("editDireccion").value.trim();
+
+        const datosEditados = {
+          nombre,
+          apellido: apellidos,
+          email: correo,
+          fechaNacimiento,
+          direccion
+        };
+
+        console.log("Datos editados:", datosEditados);
+
+        // Enviar a la API
+        fetch('http://localhost:8000/api/usuarios/update', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          body: JSON.stringify(datosEditados)
+        })
+        .then(resp => {
+          if (!resp.ok) throw new Error('Error actualizando');
+          return resp.json();
+        })
+        .then(() => {
+          // Recargar perfil con datos actualizados
+          return cargarYMostrarPerfil();
+        })
+        .then(() => {
+          alert('Información actualizada correctamente');
+          personalEdit.style.display = 'none';
+          personalView.style.display = 'block';
+        })
+        .catch(err => {
+          console.error("Error al actualizar:", err);
+          alert('Ocurrió un error al actualizar los datos');
+        });
+      });
+    }
+
+    // Cargar perfil y guardar en variable global para edición
+    async function cargarYMostrarPerfil() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return Promise.reject('No token');
+      }
+
+      try {
+        const resp = await fetch('http://localhost:8000/api/usuarios/me', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        if (resp.status === 401 || resp.status === 403) {
+          localStorage.removeItem('token');
+          window.location.href = '/login.html';
+          return Promise.reject('No autorizado');
+        }
+        if (!resp.ok) {
+          throw new Error('No se pudieron cargar los datos');
+        }
+
+        const user = await resp.json();
+        datosUsuarioActual = user; // Guardar datos para editar
+        poblarInformacionPersonal(user);
+        poblarContactosEmergencia(user);
+
+        return user;  // Retornar para encadenar promesas
+      } catch (err) {
+        console.error(err);
+        const cont = document.getElementById('personalInfoView');
+        if (cont) cont.innerHTML = '<p style="color:red;">Error al cargar datos.</p>';
+        return Promise.reject(err);
+      }
+    }
+
+    // Función para calcular la edad desde la fecha de nacimiento
+    function calcularEdad(fechaNacimiento) {
+      if (!fechaNacimiento) return '';
+      const hoy = new Date();
+      const fechaNac = new Date(fechaNacimiento);
+      let edad = hoy.getFullYear() - fechaNac.getFullYear();
+      const mes = hoy.getMonth() - fechaNac.getMonth();
+      if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+        edad--;
+      }
+      return edad;
+    }
+
+    function poblarInformacionPersonal(user) {
+      const edadCalculada = calcularEdad(user.fechaNacimiento);
+
+      const mapeo = {
+        'Nombre': user.nombre || '',
+        'Apellidos': user.apellido || '',
+        'Cédula': user.cedula || '',
+        'Correo Electrónico': user.email || '',
+        'Fecha de Nacimiento': formatearFecha(user.fechaNacimiento) || '',
+        'Edad': (edadCalculada !== '' ? edadCalculada + ' años' : ''),
+        'Dirección': user.direccion || '',
+        'Grado': user.grado || ''
+      };
+
+      document.querySelectorAll('#personalInfoView .mb-3').forEach(div => {
+        const etiqueta = div.querySelector('label')?.innerText.trim();
+        const elementoP = div.querySelector('p.form-control-static');
+        if (etiqueta && elementoP && mapeo.hasOwnProperty(etiqueta)) {
+          elementoP.innerText = mapeo[etiqueta];
+        }
+      });
+    }
+
+    function poblarContactosEmergencia(user) {
+      const contactos = Array.isArray(user.contactosEmergencia)
+        ? user.contactosEmergencia
+        : [];
+
+      const cards = document.querySelectorAll('#familyInfoView .card-body');
+      cards.forEach((cardBody, idx) => {
+        const contacto = contactos[idx];
+        if (!contacto) {
+          cardBody.querySelector('.card-title').innerText = `Contacto ${idx + 1}`;
+          cardBody.querySelector('.card-text').innerHTML = `<em>No definido</em>`;
+          return;
+        }
+
+        const titulo = cardBody.querySelector('.card-title');
+        titulo.innerText = `${contacto.nombres || ''} ${contacto.apellidos || ''}`.trim();
+
+        const texto = cardBody.querySelector('.card-text');
+        texto.innerHTML = `
+          <strong>Parentesco:</strong> ${contacto.parentesco || ''}<br>
+          <strong>Teléfono:</strong> ${contacto.telefono || ''}<br>
+          <strong>Correo:</strong> ${contacto.correo || ''}
+        `;
+      });
+    }
+
+    function formatearFecha(fechaISO) {
+      if (!fechaISO) return '';
+      const d = new Date(fechaISO);
+      if (isNaN(d)) return '';
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const año = d.getFullYear();
+      return `${dia}/${mes}/${año}`;
+    }
+  });
+</script>
+
+
 
 <script src="../assets/js/validarAcceso.js" defer></script>
 
