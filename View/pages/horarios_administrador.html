@@ -450,19 +450,21 @@
               </button>
             </div>
     
-            <table class="table table-hover text-center">
+            <table id="tabla-horarios" class="table table-hover text-center">
               <thead class="thead-light">
                 <tr>
-                  <th>Materia</th>
-                  <th>Horario</th>
                   <th>Docente</th>
-                  <th>Grupo</th>
+                  <th>Grado</th>
+                  <th>Día</th>
+                  <th>Hora</th>
+                  <th>Aula</th>
+                  <th>Comentario</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
-              <tbody>
-              </tbody>
+              <tbody></tbody>
             </table>
+
     
           </div>
         </div>
@@ -582,94 +584,54 @@
 </main>
 
   <script>
-    let clases = [
-      { materia: "Matemáticas", horario: "Lunes 9:00 - 10:30", docente: "Prof. Juárez", grupo: "Grupo A" },
-      { materia: "Inglés", horario: "Martes 11:00 - 12:30", docente: "Prof. Gómez", grupo: "Grupo B" },
-      { materia: "Ciencias", horario: "Miércoles 11:00 - 12:30", docente: "Prof. Martinez", grupo: "Grupo A" },
-      { materia: "Estudios Sociales", horario: "Viernes 1:00 - 3:30", docente: "Prof. Rodríguez", grupo: "Grupo A" },
-    ];
+document.addEventListener('DOMContentLoaded', async () => {
+  const tablaBody = document.querySelector('#tabla-horarios tbody');
+  const token = localStorage.getItem('token'); // Asegúrate de que esto esté guardado después del login
 
-    let modoFormulario = 'agregar';
-    let indiceClaseEditar = null;
+  if (!tablaBody || !token) {
+    console.error('No se encontró la tabla o el token');
+    return;
+  }
 
-    function renderizarTabla() {
-      const tbody = document.querySelector("tbody");
-      tbody.innerHTML = "";
+  try {
+    const response = await fetch('http://localhost:8000/api/horarios', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-      clases.forEach((clase, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-        <td>${clase.materia}</td>
-        <td>${clase.horario}</td>
-        <td>${clase.docente}</td>
-        <td>${clase.grupo}</td>
+    if (!response.ok) {
+      throw new Error('Error al obtener horarios');
+    }
+
+    const horarios = await response.json();
+
+    horarios.forEach(horario => {
+      const fila = document.createElement('tr');
+
+      fila.innerHTML = `
+        <td>${horario.docenteId?.nombre || 'Desconocido'} ${horario.docenteId?.apellido || ''}</td>
+        <td>${horario.grado}</td>
+        <td>${horario.dia}</td>
+        <td>${horario.horaInicio} - ${horario.horaFin}</td>
+        <td>${horario.aula || '-'}</td>
+        <td>${horario.comentario || '-'}</td>
         <td>
-          <button class="btn btn-sm btn-primary me-2" onclick="abrirFormulario('modificar', ${index})">Modificar Clase</button>
-          <button class="btn btn-sm btn-danger" onclick="abrirModalEliminar(${index})">Eliminar Clase</button>
+          <button class="btn btn-sm btn-warning" onclick="editarHorario('${horario._id}')">Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="eliminarHorario('${horario._id}')">Eliminar</button>
         </td>
       `;
-        tbody.appendChild(tr);
-      });
-    }
 
-    window.onload = renderizarTabla;
+      tablaBody.appendChild(fila);
+    });
 
-    function abrirFormulario(tipo, index = null) {
-      modoFormulario = tipo;
-      indiceClaseEditar = index;
+  } catch (error) {
+    console.error('Error al cargar horarios:', error);
+    alert('No se pudieron cargar los horarios');
+  }
+});
+</script>
 
-      document.getElementById('modalClaseTitulo').innerText = tipo === 'agregar' ? 'Agregar Clase' : 'Modificar Clase';
-
-      const form = document.querySelector("#modalClase form");
-      form.reset();
-
-      if (tipo === 'modificar' && clases[index]) {
-        form[0].value = clases[index].materia;
-        form[1].value = clases[index].horario;
-        form[2].value = clases[index].docente;
-        form[3].value = clases[index].grupo;
-      }
-
-      const modal = new bootstrap.Modal(document.getElementById('modalClase'));
-      modal.show();
-    }
-
-    function confirmarClase() {
-      const form = document.querySelector("#modalClase form");
-      const nuevaClase = {
-        materia: form[0].value,
-        horario: form[1].value,
-        docente: form[2].value,
-        grupo: form[3].value
-      };
-
-      if (modoFormulario === 'agregar') {
-        clases.push(nuevaClase);
-      } else if (modoFormulario === 'modificar' && indiceClaseEditar !== null) {
-        clases[indiceClaseEditar] = nuevaClase;
-      }
-
-      renderizarTabla();
-      bootstrap.Modal.getInstance(document.getElementById('modalClase')).hide();
-    }
-
-    let indiceEliminar = null;
-
-    function abrirModalEliminar(index) {
-      indiceEliminar = index;
-      const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
-      modal.show();
-    }
-
-    function confirmarEliminar() {
-      if (indiceEliminar !== null) {
-        clases.splice(indiceEliminar, 1);
-        renderizarTabla();
-      }
-
-      bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide();
-    }
-  </script>
 
   <!-- Core -->
   <script src="../vendor/@popperjs/core/dist/umd/popper.min.js"></script>
