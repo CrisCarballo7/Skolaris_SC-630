@@ -165,6 +165,7 @@
 
       if (response.ok) {
         console.log('Login exitoso:', data);
+        
 
         const userRole = (data.user?.rol || '').toLowerCase();
         if (!userRole || !paginasPermitidas[userRole]) {
