@@ -5,6 +5,9 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes'); // nombre correcto
+//horarios
+const horarioRoutes = require('./routes/horarioRoutes');
+
 
 const cors = require('cors');
 const PORT = process.env.PORT || 8000;
@@ -17,6 +20,9 @@ app.use(express.json());
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes); // ✅ ahora la ruta será /api/usuarios/...
+app.use('/api', horarioRoutes); //ruta para horario
+
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
