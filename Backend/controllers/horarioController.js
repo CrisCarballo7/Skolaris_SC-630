@@ -17,15 +17,18 @@ const obtenerHorarios = async (req, res) => {
     let horarios;
 
     if (req.user.rol === 'Estudiante') {
-      // Filtro por grado del estudiante
       const grupo = req.user.grado;
       if (!grupo) {
         return res.status(400).json({ error: 'El usuario no tiene grado definido' });
       }
 
       horarios = await Horario.find({ grupo }).populate('docenteId', 'nombre apellido email');
+
+    } else if (req.user.rol === 'Docente') {
+      horarios = await Horario.find({ docenteId: req.user.id }).populate('docenteId', 'nombre apellido email');
+
     } else {
-      // Admin o Docente: ven todo
+      // Admin
       horarios = await Horario.find().populate('docenteId', 'nombre apellido email');
     }
 
@@ -34,6 +37,7 @@ const obtenerHorarios = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener los horarios' });
   }
 };
+
 
 
 // Obtener por ID
