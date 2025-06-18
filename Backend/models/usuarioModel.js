@@ -9,7 +9,7 @@ const usuarioSchema = new mongoose.Schema({
   direccion: String,
   email: { type: String, required: true, unique: true, lowercase: true },
   contrasena: { type: String, required: true },
-  rol: String,
+  rol: { type: String, enum: ['Admin', 'Docente', 'Estudiante'], required: true },
   grado: String,
   forzarCambioContrasena: Boolean,
 });
