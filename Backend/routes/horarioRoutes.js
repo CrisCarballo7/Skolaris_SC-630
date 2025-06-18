@@ -5,6 +5,7 @@ const auth = require('../middlewares/authMiddleware'); // asumiendo middleware d
 const horarioCtrl = require('../controllers/horarioController');
 
 // Crear (solo admin)
+            //ruta    -   quien la usa -  el controller
 router.post('/horarios', auth('Admin'), horarioCtrl.crearHorario);
 
 // Ver todos (admin, docente y estudiantes)
