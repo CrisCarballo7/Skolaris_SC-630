@@ -32,19 +32,12 @@ const crearUsuario = async (req, res) => {
 // Obtener todos los usuarios
 const obtenerUsuarios = async (req, res) => {
   try {
-    const filtro = {};
-
-    if (req.query.rol) {
-      filtro.rol = req.query.rol; // Esto aplica el filtro cuando haces /usuarios?rol=Docente
-    }
-
-    const usuarios = await modeloUsuario.find(filtro).select('-contrasena');
+    const usuarios = await modeloUsuario.find();
     res.status(200).json(usuarios);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener los usuarios" });
   }
 };
-
 
 // Actualizar usuario basado en el id del token (req.user)
 const actualizarUsuarios = async (req, res) => {

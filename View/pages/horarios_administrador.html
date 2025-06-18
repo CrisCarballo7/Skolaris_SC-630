@@ -483,28 +483,25 @@
             <form>
               <div class="mb-3">
                 <label class="form-label">Materia</label>
-                <input type="text" class="form-control" placeholder="Ej. Ciencias" id="materia">
+                <input type="text" class="form-control" placeholder="Ej. Ciencias">
               </div>
               <div class="mb-3">
                 <label class="form-label">Horario</label>
-                <input type="text" class="form-control" placeholder="Ej. Jueves 10:00 - 11:30" id="horario">
+                <input type="text" class="form-control" placeholder="Ej. Jueves 10:00 - 11:30">
               </div>
               <div class="mb-3">
-                <select id="docente" class="form-control">
-                  <option value="">Seleccione un docente</option>
-                </select>
-
+                <label class="form-label">Docente</label>
+                <input type="text" class="form-control" placeholder="Ej. Prof. Pérez">
               </div>
               <div class="mb-3">
                 <label class="form-label">Grupo</label>
-                <input type="text" class="form-control" placeholder="Ej. Grupo C" id="grupo">
+                <input type="text" class="form-control" placeholder="Ej. Grupo C">
               </div>
             </form>
           </div>
           <div class="modal-footer">
             <button class="btn btn-primary" data-bs-dismiss="modal" style="font-family: 'Inter', sans-serif;">Cancelar</button>
-            <button id="btnGuardarClase" class="btn btn-primary" style="background-color: #8ABD3C; border-color: #8ABD3C; font-family: 'Inter', sans-serif; color: white;">Guardar</button>
-
+            <button class="btn btn-primary" onclick="confirmarClase()" style="background-color: #8ABD3C; border-color: #8ABD3C; font-family: 'Inter', sans-serif; color: white;">Confirmar</button>
           </div>
         </div>
       </div>
@@ -586,241 +583,54 @@
   </footer>
 </main>
 
- <script>
-  let horarioEditando = null;
+  <script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const tablaBody = document.querySelector('#tabla-horarios tbody');
+  const token = localStorage.getItem('token'); // Asegúrate de que esto esté guardado después del login
 
-  // Cargar docentes con rol "Docente"
-  async function cargarDocentesEnSelect() {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    try {
-      const res = await fetch('http://localhost:8000/api/usuarios?rol=Docente', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const docentes = await res.json();
-      const select = document.getElementById('docente');
-      select.innerHTML = '<option value="">Seleccione un docente</option>';
-
-      docentes.forEach(doc => {
-        const option = document.createElement('option');
-        option.value = doc._id;
-        option.textContent = `${doc.nombre} ${doc.apellido}`;
-        select.appendChild(option);
-      });
-
-    } catch (err) {
-      console.error('Error cargando docentes:', err);
-    }
+  if (!tablaBody || !token) {
+    console.error('No se encontró la tabla o el token');
+    return;
   }
 
-  // Obtener y mostrar horarios
-  document.addEventListener('DOMContentLoaded', async () => {
-    const tablaBody = document.querySelector('#tabla-horarios tbody');
-    const token = localStorage.getItem('token');
-
-    if (!tablaBody || !token) return console.error('No se encontró la tabla o el token');
-
-    try {
-      const response = await fetch('http://localhost:8000/api/horarios', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (!response.ok) throw new Error('Error al obtener horarios');
-      const horarios = await response.json();
-
-      horarios.forEach(horario => {
-        const fila = document.createElement('tr');
-        fila.innerHTML = `
-          <td>${horario.docenteId?.nombre || 'Desconocido'} ${horario.docenteId?.apellido || ''}</td>
-          <td>${horario.grado}</td>
-          <td>${horario.dia}</td>
-          <td>${horario.horaInicio} - ${horario.horaFin}</td>
-          <td>${horario.aula || '-'}</td>
-          <td>${horario.comentario || '-'}</td>
-          <td>
-            <button class="btn btn-sm btn-warning" onclick="editarHorario('${horario._id}')">Editar</button>
-            <button class="btn btn-sm btn-danger" onclick="eliminarHorario('${horario._id}')">Eliminar</button>
-          </td>`;
-        tablaBody.appendChild(fila);
-      });
-
-    } catch (error) {
-      console.error('Error al cargar horarios:', error);
-      alert('No se pudieron cargar los horarios');
-    }
-  });
-
-  // Confirmar (crear) horario
-  async function confirmarClase() {
-    const token = localStorage.getItem('token');
-    const docenteId = document.getElementById('docente').value;
-    const grado = document.getElementById('grupo').value.trim();
-    const diaYHora = document.getElementById('horario').value.trim();
-    const comentario = document.getElementById('materia').value.trim();
-
-    if (!token || !docenteId || !grado || !diaYHora) {
-      return alert('Todos los campos son obligatorios.');
-    }
-
-    const partes = diaYHora.trim().split(/\s+/); // divide por cualquier cantidad de espacios
-    if (partes.length < 2) return alert('Formato de horario inválido. Usa: "Lunes 08:00 - 09:30"');
-
-    const dia = partes[0];
-    const horas = partes.slice(1).join(' '); // junta todo lo demás
-
-    const [horaInicio, horaFin] = horas.split('-').map(h => h.trim());
-    if (!horaInicio || !horaFin) return alert('Debes ingresar ambas horas: inicio y fin.');
-
-
-    const nuevoHorario = {
-      docenteId,
-      grado,
-      dia,
-      horaInicio,
-      horaFin,
-      aula: "Aula 1",
-      comentario
-    };
-
-    try {
-      const response = await fetch('http://localhost:8000/api/horarios', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(nuevoHorario)
-      });
-
-      if (!response.ok) throw new Error('Error al guardar horario');
-      alert('Clase agregada exitosamente');
-      bootstrap.Modal.getInstance(document.getElementById('modalClase')).hide();
-      document.querySelector('#modalClase form').reset();
-      location.reload();
-
-    } catch (err) {
-      console.error(err);
-      alert('Error al guardar el horario');
-    }
-  }
-
-  // Editar
-  async function editarHorario(id) {
-    horarioEditando = id;
-    await cargarDocentesEnSelect();
-
-    const fila = document.querySelector(`button[onclick="editarHorario('${id}')"]`).closest('tr');
-    const [docente, grado, dia, hora, aula, comentario] = Array.from(fila.children).map(td => td.innerText.trim());
-
-    document.getElementById('docente').value = obtenerIdDocenteDesdeTexto(docente); // Ya no por nombre, sino por value
-    document.getElementById('grupo').value = grado;
-    document.getElementById('horario').value = `${dia} ${hora}`;
-    document.getElementById('materia').value = comentario;
-
-    document.getElementById('modalClaseTitulo').innerText = 'Editar Clase';
-    document.getElementById('btnGuardarClase').onclick = actualizarClase;
-    new bootstrap.Modal(document.getElementById('modalClase')).show();
-  }
-
-  // Actualizar
-  async function actualizarClase() {
-    const token = localStorage.getItem('token');
-    const docenteId = document.getElementById('docente').value;
-    const grado = document.getElementById('grupo').value.trim();
-    const diaYHora = document.getElementById('horario').value.trim();
-    const comentario = document.getElementById('materia').value.trim();
-
-    if (!token || !docenteId || !grado || !diaYHora) {
-      return alert('Todos los campos son obligatorios.');
-    }
-
-    const [dia, horas] = diaYHora.split(' ');
-    const [horaInicio, horaFin] = horas.split('-').map(h => h.trim());
-
-    const horarioActualizado = {
-      docenteId,
-      grado,
-      dia,
-      horaInicio,
-      horaFin,
-      aula: "Aula 1",
-      comentario
-    };
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/horarios/${horarioEditando}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(horarioActualizado)
-      });
-
-      if (!response.ok) throw new Error('Error al actualizar horario');
-      alert('Horario actualizado correctamente');
-      bootstrap.Modal.getInstance(document.getElementById('modalClase')).hide();
-      document.querySelector('#modalClase form').reset();
-      horarioEditando = null;
-      location.reload();
-
-    } catch (err) {
-      console.error(err);
-      alert('Error al actualizar el horario');
-    }
-  }
-
-  // Eliminar
-  async function eliminarHorario(id) {
-    const token = localStorage.getItem('token');
-    if (!token || !confirm('¿Estás seguro que deseas eliminar esta clase?')) return;
-
-    try {
-      const res = await fetch(`http://localhost:8000/api/horarios/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (!res.ok) throw new Error('No se pudo eliminar el horario');
-      alert('Horario eliminado exitosamente');
-      location.reload();
-    } catch (err) {
-      console.error(err);
-      alert('Error al eliminar el horario');
-    }
-  }
-
-  // Abrir modal en modo crear
-  async function abrirFormulario(modo) {
-    horarioEditando = null;
-    await cargarDocentesEnSelect();
-
-    document.getElementById('docente').value = '';
-    document.getElementById('grupo').value = '';
-    document.getElementById('horario').value = '';
-    document.getElementById('materia').value = '';
-    document.getElementById('modalClaseTitulo').innerText = 'Agregar Clase';
-
-    document.getElementById('btnGuardarClase').onclick = confirmarClase;
-    new bootstrap.Modal(document.getElementById('modalClase')).show();
-  }
-
-  // Extra: si querés, podrías mapear el nombre del docente al option.value (id) desde una lista cacheada
-  function obtenerIdDocenteDesdeTexto(nombreCompleto) {
-    const opciones = document.querySelectorAll('#docente option');
-    for (let op of opciones) {
-      if (op.textContent.trim().toLowerCase() === nombreCompleto.trim().toLowerCase()) {
-        return op.value;
+  try {
+    const response = await fetch('http://localhost:8000/api/horarios', {
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-    }
-    return '';
-  }
-</script>
+    });
 
+    if (!response.ok) {
+      throw new Error('Error al obtener horarios');
+    }
+
+    const horarios = await response.json();
+
+    horarios.forEach(horario => {
+      const fila = document.createElement('tr');
+
+      fila.innerHTML = `
+        <td>${horario.docenteId?.nombre || 'Desconocido'} ${horario.docenteId?.apellido || ''}</td>
+        <td>${horario.grado}</td>
+        <td>${horario.dia}</td>
+        <td>${horario.horaInicio} - ${horario.horaFin}</td>
+        <td>${horario.aula || '-'}</td>
+        <td>${horario.comentario || '-'}</td>
+        <td>
+          <button class="btn btn-sm btn-warning" onclick="editarHorario('${horario._id}')">Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="eliminarHorario('${horario._id}')">Eliminar</button>
+        </td>
+      `;
+
+      tablaBody.appendChild(fila);
+    });
+
+  } catch (error) {
+    console.error('Error al cargar horarios:', error);
+    alert('No se pudieron cargar los horarios');
+  }
+});
+</script>
 
 
   <!-- Core -->
