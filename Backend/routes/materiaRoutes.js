@@ -1,16 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/authMiddleware');
-const materiaCtrl = require('../controllers/materiaController');
+const {
+  crearMateria,
+  obtenerMaterias,
+  obtenerMateriaPorId,
+  actualizarMateria,
+  eliminarMateria,
+} = require('../controllers/materiaController');
 
-// Solo admin puede crear, editar, eliminar
-router.post('/materias', auth('Admin'), materiaCtrl.crearMateria);
-router.get('/materias', auth(['Admin', 'Docente', 'Estudiante']), materiaCtrl.obtenerMaterias);
-router.get('/materias/:id', auth(['Admin', 'Docente', 'Estudiante']), materiaCtrl.obtenerMateriaPorId);
-router.put('/materias/:id', auth('Admin'), materiaCtrl.actualizarMateria);
-router.delete('/materias/:id', auth('Admin'), materiaCtrl.eliminarMateria);
+// Crear materia
+router.post('/', auth('Admin'), crearMateria);
 
-// Agregar estudiantes a materia (solo admin)
-router.patch('/materias/:id/estudiantes', auth('Admin'), materiaCtrl.agregarEstudiantes);
+// Obtener todas las materias
+router.get('/', auth(['Admin', 'Docente']), obtenerMaterias);
+
+// Obtener materia por ID
+router.get('/:id', auth(['Admin', 'Docente']), obtenerMateriaPorId);
+
+// Actualizar materia
+router.put('/:id', auth('Admin'), actualizarMateria);
+
+// Eliminar materia
+router.delete('/:id', auth('Admin'), eliminarMateria);
 
 module.exports = router;

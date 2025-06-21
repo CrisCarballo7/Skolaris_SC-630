@@ -104,10 +104,37 @@ const obtenerUsuarioActual = async (req, res) => {
   }
 };
 
+//funcion para agregar un grupo al estudiante
+const asignarGrupoAUsuario = async (req, res) => {
+  try {
+    const usuarioId = req.params.id; // ✅ ESTA LÍNEA ES CLAVE
+    console.log('➡️ ID recibido:', req.params.id);
+    const { grupoId } = req.body;
+    console.log('➡️ Grupo ID recibido:', req.body.grupoId);
+    const usuario = await modeloUsuario.findById(usuarioId);
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    if (usuario.rol !== 'Estudiante') {
+      return res.status(400).json({ error: 'Solo se pueden asignar grupos a estudiantes' });
+    }
+
+    usuario.grupo = grupoId;
+    await usuario.save();
+
+    res.status(200).json({ message: 'Grupo asignado correctamente', usuario });
+  } catch (error) {
+    console.error('[ERROR] al asignar grupo:', error);
+    res.status(500).json({ error: 'Error al asignar grupo al estudiante' });
+  }
+};
+
+
+
 module.exports = {
   crearUsuario,
   obtenerUsuarios,
   actualizarUsuarios,
   eliminarUsuarios,
   obtenerUsuarioActual,
+  asignarGrupoAUsuario,
 };
