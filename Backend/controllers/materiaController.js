@@ -3,46 +3,43 @@ const Materia = require('../models/materiaModel');
 // Crear materia
 const crearMateria = async (req, res) => {
   try {
-    const nuevaMateria = new Materia(req.body);
-    await nuevaMateria.save();
-    res.status(201).json(nuevaMateria);
+    const materia = new Materia(req.body);
+    await materia.save();
+    res.status(201).json(materia);
   } catch (error) {
-    res.status(500).json({ error: 'Error al crear la materia' });
+    res.status(500).json({ error: 'Error al crear materia' });
   }
 };
 
 // Obtener todas las materias
 const obtenerMaterias = async (req, res) => {
   try {
-    const materias = await Materia.find()
-      .populate('docente', 'nombre apellido email')
-      .populate('estudiantes', 'nombre apellido email');
+    const materias = await Materia.find();
     res.status(200).json(materias);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener materias' });
   }
 };
 
-// Obtener materia por ID
+// Obtener una materia por ID
 const obtenerMateriaPorId = async (req, res) => {
   try {
-    const materia = await Materia.findById(req.params.id)
-      .populate('docente', 'nombre apellido email')
-      .populate('estudiantes', 'nombre apellido email');
+    const materia = await Materia.findById(req.params.id);
     if (!materia) return res.status(404).json({ error: 'Materia no encontrada' });
     res.status(200).json(materia);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener la materia' });
+    res.status(500).json({ error: 'Error al buscar materia' });
   }
 };
 
 // Actualizar materia
 const actualizarMateria = async (req, res) => {
   try {
-    const actualizada = await Materia.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.status(200).json(actualizada);
+    const materia = await Materia.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!materia) return res.status(404).json({ error: 'Materia no encontrada' });
+    res.status(200).json(materia);
   } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar la materia' });
+    res.status(500).json({ error: 'Error al actualizar materia' });
   }
 };
 
@@ -52,22 +49,7 @@ const eliminarMateria = async (req, res) => {
     await Materia.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Materia eliminada correctamente' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al eliminar la materia' });
-  }
-};
-
-// Agregar estudiantes a una materia
-const agregarEstudiantes = async (req, res) => {
-  try {
-    const { estudiantes } = req.body;
-    const materia = await Materia.findByIdAndUpdate(
-      req.params.id,
-      { $addToSet: { estudiantes: { $each: estudiantes } } },
-      { new: true }
-    );
-    res.status(200).json(materia);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al asignar estudiantes' });
+    res.status(500).json({ error: 'Error al eliminar materia' });
   }
 };
 
@@ -77,5 +59,4 @@ module.exports = {
   obtenerMateriaPorId,
   actualizarMateria,
   eliminarMateria,
-  agregarEstudiantes
 };
