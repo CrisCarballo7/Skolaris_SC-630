@@ -6,7 +6,10 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes'); // nombre correcto
-const horarioRoutes = require('./routes/horarioRoutes'); //horarios
+const horarioRoutes = require('./routes/horarioRoutes'); // horarios
+const gradoRoutes = require('./routes/gradoRoutes'); //ruta grados
+const grupoRoutes = require('./routes/grupoRoutes'); //ruta grupos
+
 
 const cors = require('cors');
 const PORT = process.env.PORT || 8000;
@@ -20,6 +23,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes); // ✅ ahora la ruta será /api/usuarios/...
 app.use('/api', horarioRoutes); //ruta para horario
+app.use('/api/grados', gradoRoutes); //ruta para grado
+app.use('/api/grupos', grupoRoutes); //ruta para grupos
 
 
 app.listen(PORT, () => {
