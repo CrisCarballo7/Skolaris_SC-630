@@ -1,0 +1,1 @@
+contenido simulado de rolModel
