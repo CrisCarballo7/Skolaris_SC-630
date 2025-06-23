@@ -1,17 +1,21 @@
 const express = require('express');
 const app = express(); // <-- Esto debe ir antes de usar `app`
-
 require('dotenv').config();
-//importando rutas
-const connectDB = require('./config/db');
-const authRoutes = require('./routes/authRoutes');
-const usuarioRoutes = require('./routes/usuarioRoutes'); // nombre correcto
-const horarioRoutes = require('./routes/horarioRoutes'); // horarios
-const gradoRoutes = require('./routes/gradoRoutes'); //ruta grados
-const grupoRoutes = require('./routes/grupoRoutes'); //ruta grupos
-const materiaRoutes = require('./routes/materiaRoutes'); //ruta materias
-const materiaGrupoRoutes = require('./routes/materiaGrupoRoutes'); //ruta materiaporgrupo
 
+const connectDB = require('./config/db');
+
+// Importar rutas existentes
+const authRoutes           = require('./routes/authRoutes');
+const usuarioRoutes        = require('./routes/usuarioRoutes');
+const horarioRoutes        = require('./routes/horarioRoutes');
+const gradoRoutes          = require('./routes/gradoRoutes');
+const grupoRoutes          = require('./routes/grupoRoutes');
+const materiaRoutes        = require('./routes/materiaRoutes');
+const materiaGrupoRoutes   = require('./routes/materiaGrupoRoutes');
+
+// Importar rutas SCRUM-5 y SCRUM-14
+const rolRoutes            = require('./routes/rolRoutes');
+const asistenciaRoutes     = require('./routes/asistenciaRoutes');
 
 const cors = require('cors');
 const PORT = process.env.PORT || 8000;
@@ -21,18 +25,23 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-// montando las Rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/usuarios', usuarioRoutes); // ✅ ahora la ruta será /api/usuarios/...
-app.use('/api', horarioRoutes); //ruta para horario
-app.use('/api/grados', gradoRoutes); //ruta para grado
-app.use('/api/grupos', grupoRoutes); //ruta para grupos
-app.use('/api/materias', materiaRoutes); //ruta para materias
-app.use('/api/materiasGrupos', materiaGrupoRoutes); //ruta para materiasgrupos
+// Montar rutas
+app.use('/api/auth',           authRoutes);
+app.use('/api/usuarios',       usuarioRoutes);
+
+// SCRUM-5: gestión de Roles
+app.use('/api/roles',          rolRoutes);
+
+// SCRUM-14: gestión de Asistencias
+app.use('/api/asistencias',    asistenciaRoutes);
+
+// Rutas de tu módulo de clases, grados, etc.
+app.use('/api/horarios',       horarioRoutes);
+app.use('/api/grados',         gradoRoutes);
+app.use('/api/grupos',         grupoRoutes);
+app.use('/api/materias',       materiaRoutes);
+app.use('/api/materiasGrupos', materiaGrupoRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
-
-
-
