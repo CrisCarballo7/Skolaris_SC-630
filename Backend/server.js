@@ -29,6 +29,7 @@ app.use('/api/grados', gradoRoutes); //ruta para grado
 app.use('/api/grupos', grupoRoutes); //ruta para grupos
 app.use('/api/materias', materiaRoutes); //ruta para materias
 app.use('/api/materiasGrupos', materiaGrupoRoutes); //ruta para materiasgrupos
+app.use('/api/horarios', horarioRoutes); //ruta para horarios
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
