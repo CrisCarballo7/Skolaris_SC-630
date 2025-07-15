@@ -9,6 +9,7 @@ const {
   actualizarUsuarios,
   eliminarUsuarios,
   obtenerUsuarioActual,
+  asignarGrupoAUsuario,
 } = require('../controllers/usuarioController');
 
 // Crear usuario
@@ -28,5 +29,8 @@ router.put('/:id', actualizarUsuarios);
 
 // Eliminar usuario
 router.delete('/:id', eliminarUsuarios);
+
+router.put('/:id/asignar-grupo', authMiddleware('Admin'), asignarGrupoAUsuario);
+
 
 module.exports = router;
