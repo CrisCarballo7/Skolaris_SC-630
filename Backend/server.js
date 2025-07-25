@@ -12,7 +12,6 @@ const grupoRoutes = require('./routes/grupoRoutes'); //ruta grupos
 const materiaRoutes = require('./routes/materiaRoutes'); //ruta materias
 const materiaGrupoRoutes = require('./routes/materiaGrupoRoutes'); //ruta materiaporgrupo
 
-
 const cors = require('cors');
 const PORT = process.env.PORT || 8000;
 
@@ -29,6 +28,9 @@ app.use('/api/grados', gradoRoutes); //ruta para grado
 app.use('/api/grupos', grupoRoutes); //ruta para grupos
 app.use('/api/materias', materiaRoutes); //ruta para materias
 app.use('/api/materiasGrupos', materiaGrupoRoutes); //ruta para materiasgrupos
+app.use('/api/horarios', horarioRoutes); //ruta para horarios
+
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
