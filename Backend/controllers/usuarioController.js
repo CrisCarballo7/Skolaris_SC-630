@@ -84,14 +84,13 @@ const eliminarUsuarios = async (req, res) => {
 // =====> NUEVO: Obtener datos del usuario autenticado
 const obtenerUsuarioActual = async (req, res) => {
   try {
-    // req.user viene del authMiddleware (payload del JWT)
-    // asumimos que el payload tiene `id` (o _id). Ajusta si tu campo es distinto.
+    
     const userId = req.user.id || req.user._id;
     if (!userId) {
       return res.status(400).json({ error: 'ID de usuario no encontrado en token' });
     }
 
-    // Traer del modelo solo los campos que quieras exponer (sin la contraseña)
+    // Traer del modelo solo los campos a exponer (sin la contraseña)
     const usuario = await modeloUsuario.findById(userId).select('-contrasena');
     if (!usuario) {
       return res.status(404).json({ error: 'Usuario no existe' });
@@ -128,6 +127,18 @@ const asignarGrupoAUsuario = async (req, res) => {
   }
 };
 
+const obtenerEstudiantes = async (req, res) => {
+  try {
+    const estudiantes = await Usuario.find({ rol: 'Estudiante' }).populate('grupo');
+    res.json(estudiantes);
+  } catch (error) {
+    console.error("❌ Error en obtenerEstudiantes:", error);
+    res.status(500).json({ error: 'Error al obtener estudiantes' });
+  }
+};
+
+
+
 
 
 module.exports = {
@@ -137,4 +148,5 @@ module.exports = {
   eliminarUsuarios,
   obtenerUsuarioActual,
   asignarGrupoAUsuario,
+  obtenerEstudiantes
 };

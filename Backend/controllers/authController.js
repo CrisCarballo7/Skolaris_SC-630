@@ -37,7 +37,10 @@ exports.login = async (req, res) => {
     const { email, contrasena, password } = req.body;
     const inputPassword = contrasena || password;
 
-    const user = await User.findOne({ email });
+    // populate para grupo
+    const user = await User.findOne({ email })
+      .populate('grupo');
+
     if (!user) {
       return res.status(400).json({ message: 'Usuario no encontrado' });
     }
@@ -47,13 +50,19 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Contraseña incorrecta' });
     }
 
-    const token = jwt.sign(
-      { id: user._id, rol: user.rol, email: user.email },
-      process.env.JWT_SECRET || 'secreto',
-      { expiresIn: '1h' }
-    );
+    //payload para el token
+    const payload = {
+      id: user._id,
+      rol: user.rol,
+      email: user.email,
+      nombre: user.nombre,
+      grupo: user.grupo?._id || null,
+      grado: user.grado || null,
+    };
 
-    // Envía datos completos menos contrasena
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'secreto', { expiresIn: '2h' });
+
+    //Respuesta al frontend (user sin contraseña)
     res.json({
       token,
       user: {
@@ -67,9 +76,11 @@ exports.login = async (req, res) => {
         email: user.email,
         rol: user.rol,
         grado: user.grado,
+        grupo: user.grupo?._id || null
       },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
