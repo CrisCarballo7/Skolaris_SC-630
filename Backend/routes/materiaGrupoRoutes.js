@@ -24,4 +24,9 @@ router.put('/:id', auth('Admin'), actualizarMateriaGrupo);
 // Eliminar asignación
 router.delete('/:id', auth('Admin'), eliminarMateriaGrupo);
 
+//   hace falta una ruta para obtener materiaXgrupo por id del grupo    //
+
+
+
+
 module.exports = router;
